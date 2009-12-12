@@ -10,11 +10,11 @@ of your plugin and extension to this project.
 
 Released under MIT license.
 
-== Note on Patches/Pull Requests
+# Note on Patches/Pull Requests
  
 * First release!
 
-== Copyright
+# Copyright
 
 Copyright 2009 Michael Lang.  All rights reserved.
 Released under MIT license.  See LICENSE for details.
