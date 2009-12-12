@@ -1,10 +1,7 @@
 require 'rubygems'
-require 'test/unit'
-require 'shoulda'
+require 'sequel'
+require 'bacon'
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 require 'sequel_plus'
-
-class Test::Unit::TestCase
-end

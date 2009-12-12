@@ -5,13 +5,22 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "sequel_plus"
-    gem.summary = %Q{TODO: one-line summary of your gem}
-    gem.description = %Q{TODO: longer description of your gem}
+    gem.summary = "provides plugins and extensions for Sequel"
+    gem.description = "Provides plugins and extensions for Sequel"
     gem.email = "mwlang@cybrains.net"
     gem.homepage = "http://github.com/mwlang/sequel_plus"
-    gem.authors = ["mwlang"]
-    gem.add_development_dependency "thoughtbot-shoulda", ">= 0"
-    # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
+    gem.authors = ["Michael Lang"]
+    gem.files = [
+       "LICENSE",
+       "README.md",
+       "Rakefile",
+       "lib/sequel_plus.rb",
+       "lib/**/*",
+       "test/*"
+    ]
+    
+    gem.add_development_dependency "bacon", ">= 1.0.0"
+    gem.add_dependency "sequel", ">= 3.0.0"
   end
   Jeweler::GemcutterTasks.new
 rescue LoadError
