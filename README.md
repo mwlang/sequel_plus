@@ -14,16 +14,16 @@ Released under MIT license.
 
 This gem is released to gemcutter.  Rubyforge is not utilized. 
 
-  gem install sequel_plus
+	gem install sequel_plus
 
 And then, in your project:
 
-  require 'sequel'
-  require 'sequel_plus'
+	require 'sequel'
+	require 'sequel_plus'
 
-  class Node < Sequel::Model
-    plugin :tree
-  end
+	class Node < Sequel::Model
+		plugin :tree
+	end
   
 # Note on Patches/Pull Requests
  
