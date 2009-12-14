@@ -1,1 +1,1 @@
-require 'sequel_plus/sequel_tree'
+require 'sequel_tree'
