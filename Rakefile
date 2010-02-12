@@ -15,6 +15,7 @@ begin
        "README.md",
        "Rakefile",
        "lib/*",
+       "lib/**/*",
        "test/*"
     ]
     

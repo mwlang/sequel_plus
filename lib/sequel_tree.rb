@@ -61,7 +61,7 @@ module Sequel
         #   subchild1.ancestors # => [child1, root]
         def descendants
           nodes = self.children
-          self.children.each{|c| nodes + c.descendants}
+          nodes.each{|child| nodes + child.descendants}
           nodes 
         end
 

@@ -1,2 +1,2 @@
 require 'sequel_tree'
-require 'extensions/export'
+require File.join(File.dirname(__FILE__), 'extensions', 'export')

@@ -51,11 +51,114 @@ module ExportTest
     end
 
     it "should export everything" do 
-      DB[:nodes].export.should == "id\tname\tparent_id\tposition\n1\tone\t\t1\n2\ttwo\t\t2\n3\tthree\t\t3\n4\ttwo.one\t2\t1\n5\ttwo.two\t2\t2\n6\ttwo.two.one\t5\t1\n7\tone.two\t1\t2\n8\tone.one\t1\t1\n9\tfive\t\t5\n10\tfour\t\t4\n11\tfive.one\t9\t1\n12\ttwo.three\t2\t3"
+      mem_stream = StringIO.new("", "w+")
+      DB[:nodes].export(mem_stream)
+      mem_stream.pos = 0
+      mem_stream.read.should == <<-TEXT
+"id"	"name"	"parent_id"	"position"
+1	"one"	""	1
+2	"two"	""	2
+3	"three"	""	3
+4	"two.one"	2	1
+5	"two.two"	2	2
+6	"two.two.one"	5	1
+7	"one.two"	1	2
+8	"one.one"	1	1
+9	"five"	""	5
+10	"four"	""	4
+11	"five.one"	9	1
+12	"two.three"	2	3
+      TEXT
     end
-  
+
+    it "should export everything with comma delimiter" do 
+      mem_stream = StringIO.new("", "w+")
+      DB[:nodes].export(mem_stream, :delimiter => ',')
+      mem_stream.pos = 0
+      mem_stream.read.should == <<-TEXT
+"id","name","parent_id","position"
+1,"one","",1
+2,"two","",2
+3,"three","",3
+4,"two.one",2,1
+5,"two.two",2,2
+6,"two.two.one",5,1
+7,"one.two",1,2
+8,"one.one",1,1
+9,"five","",5
+10,"four","",4
+11,"five.one",9,1
+12,"two.three",2,3
+      TEXT
+    end
+      
+    it "should export everything with comma delimiter and no quote characters" do 
+      mem_stream = StringIO.new("", "w+")
+      DB[:nodes].export(mem_stream, :delimiter => ',', :quote_char => '')
+      mem_stream.pos = 0
+      mem_stream.read.should == <<-TEXT
+id,name,parent_id,position
+1,one,,1
+2,two,,2
+3,three,,3
+4,two.one,2,1
+5,two.two,2,2
+6,two.two.one,5,1
+7,one.two,1,2
+8,one.one,1,1
+9,five,,5
+10,four,,4
+11,five.one,9,1
+12,two.three,2,3
+      TEXT
+    end
+    
     it "should export selected" do 
-      DB[:nodes].filter(:id < 3).select(:id, :name).export.should == "id\tname\n1\tone\n2\ttwo"
+      mem_stream = StringIO.new("", "w+")
+      DB[:nodes].filter(:id < 3).select(:id, :name).export(mem_stream)
+      mem_stream.pos = 0
+      mem_stream.read.should == "\"id\"\t\"name\"\n1\t\"one\"\n2\t\"two\"\n"
+    end
+
+    it "should not export headers" do 
+      mem_stream = StringIO.new("", "w+")
+      DB[:nodes].export(mem_stream, :headers => false)
+      mem_stream.pos = 0
+      mem_stream.read.should == <<-TEXT
+1	"one"	""	1
+2	"two"	""	2
+3	"three"	""	3
+4	"two.one"	2	1
+5	"two.two"	2	2
+6	"two.two.one"	5	1
+7	"one.two"	1	2
+8	"one.one"	1	1
+9	"five"	""	5
+10	"four"	""	4
+11	"five.one"	9	1
+12	"two.three"	2	3
+      TEXT
+    end
+    
+    it "should explicitly export headers" do 
+      mem_stream = StringIO.new("", "w+")
+      DB[:nodes].export(mem_stream, :headers => true)
+      mem_stream.pos = 0
+      mem_stream.read.should == <<-TEXT
+"id"	"name"	"parent_id"	"position"
+1	"one"	""	1
+2	"two"	""	2
+3	"three"	""	3
+4	"two.one"	2	1
+5	"two.two"	2	2
+6	"two.two.one"	5	1
+7	"one.two"	1	2
+8	"one.one"	1	1
+9	"five"	""	5
+10	"four"	""	4
+11	"five.one"	9	1
+12	"two.three"	2	3
+      TEXT
     end
   end
 end
