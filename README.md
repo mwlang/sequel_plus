@@ -19,7 +19,6 @@ This gem is released to gemcutter.  Rubyforge is not utilized.
 And then, in your project:
 
 	require 'sequel'
-	require 'sequel_plus'
 
 	class Node < Sequel::Model
 		plugin :tree

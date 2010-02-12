@@ -14,8 +14,7 @@ begin
        "LICENSE",
        "README.md",
        "Rakefile",
-       "lib/sequel_plus.rb",
-       "lib/**/*",
+       "lib/*",
        "test/*"
     ]
     
