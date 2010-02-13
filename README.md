@@ -30,10 +30,10 @@ This gem is released to gemcutter.  Rubyforge is not utilized.
 
 ## Use Exporter
 
-require 'sequel'
-require 'sequel_plus'
+    require 'sequel'
+    require 'sequel_plus'
 
-DB = Sequel.sqlite
+    DB = Sequel.sqlite
 
     # Every row, every column, tab delimited, unquoted...
     File.open("nodes.txt", "w"){|file| DB[:nodes].export(file)}
