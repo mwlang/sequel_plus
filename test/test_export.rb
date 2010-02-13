@@ -50,9 +50,30 @@ module ExportTest
       DB[:nodes].all.size.should == 12
     end
 
-    it "should export everything" do 
+    it "should export everything tab delimited w/o quotes" do 
       mem_stream = StringIO.new("", "w+")
       DB[:nodes].export(mem_stream)
+      mem_stream.pos = 0
+      mem_stream.read.should == <<-TEXT
+id	name	parent_id	position
+1	one		1
+2	two		2
+3	three		3
+4	two.one	2	1
+5	two.two	2	2
+6	two.two.one	5	1
+7	one.two	1	2
+8	one.one	1	1
+9	five		5
+10	four		4
+11	five.one	9	1
+12	two.three	2	3
+      TEXT
+    end
+
+    it "should export tab delimited with quotes" do 
+      mem_stream = StringIO.new("", "w+")
+      DB[:nodes].export(mem_stream, :quote_char => '"')
       mem_stream.pos = 0
       mem_stream.read.should == <<-TEXT
 "id"	"name"	"parent_id"	"position"
@@ -73,7 +94,7 @@ module ExportTest
 
     it "should export everything with comma delimiter" do 
       mem_stream = StringIO.new("", "w+")
-      DB[:nodes].export(mem_stream, :delimiter => ',')
+      DB[:nodes].export(mem_stream, :quote_char => '"', :delimiter => ',')
       mem_stream.pos = 0
       mem_stream.read.should == <<-TEXT
 "id","name","parent_id","position"
@@ -94,7 +115,7 @@ module ExportTest
       
     it "should export everything with comma delimiter and no quote characters" do 
       mem_stream = StringIO.new("", "w+")
-      DB[:nodes].export(mem_stream, :delimiter => ',', :quote_char => '')
+      DB[:nodes].export(mem_stream, :delimiter => ',')
       mem_stream.pos = 0
       mem_stream.read.should == <<-TEXT
 id,name,parent_id,position
@@ -117,7 +138,7 @@ id,name,parent_id,position
       mem_stream = StringIO.new("", "w+")
       DB[:nodes].filter(:id < 3).select(:id, :name).export(mem_stream)
       mem_stream.pos = 0
-      mem_stream.read.should == "\"id\"\t\"name\"\n1\t\"one\"\n2\t\"two\"\n"
+      mem_stream.read.should == "id\tname\n1\tone\n2\ttwo\n"
     end
 
     it "should not export headers" do 
@@ -125,18 +146,18 @@ id,name,parent_id,position
       DB[:nodes].export(mem_stream, :headers => false)
       mem_stream.pos = 0
       mem_stream.read.should == <<-TEXT
-1	"one"	""	1
-2	"two"	""	2
-3	"three"	""	3
-4	"two.one"	2	1
-5	"two.two"	2	2
-6	"two.two.one"	5	1
-7	"one.two"	1	2
-8	"one.one"	1	1
-9	"five"	""	5
-10	"four"	""	4
-11	"five.one"	9	1
-12	"two.three"	2	3
+1	one		1
+2	two		2
+3	three		3
+4	two.one	2	1
+5	two.two	2	2
+6	two.two.one	5	1
+7	one.two	1	2
+8	one.one	1	1
+9	five		5
+10	four		4
+11	five.one	9	1
+12	two.three	2	3
       TEXT
     end
     
@@ -145,19 +166,19 @@ id,name,parent_id,position
       DB[:nodes].export(mem_stream, :headers => true)
       mem_stream.pos = 0
       mem_stream.read.should == <<-TEXT
-"id"	"name"	"parent_id"	"position"
-1	"one"	""	1
-2	"two"	""	2
-3	"three"	""	3
-4	"two.one"	2	1
-5	"two.two"	2	2
-6	"two.two.one"	5	1
-7	"one.two"	1	2
-8	"one.one"	1	1
-9	"five"	""	5
-10	"four"	""	4
-11	"five.one"	9	1
-12	"two.three"	2	3
+id	name	parent_id	position
+1	one		1
+2	two		2
+3	three		3
+4	two.one	2	1
+5	two.two	2	2
+6	two.two.one	5	1
+7	one.two	1	2
+8	one.one	1	1
+9	five		5
+10	four		4
+11	five.one	9	1
+12	two.three	2	3
       TEXT
     end
   end

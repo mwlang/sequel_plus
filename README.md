@@ -1,11 +1,13 @@
 # sequel_plus
 
-This library starts the collection of plugins and possibly extension I assemble for the Ruby Sequel 
-ORM.  
+This library starts the collection of plugins and extensions I have assembled for the Ruby Sequel library.  
+The library is in very early infancy stage, so there's not much presently, but what's here is fully covered
+in specs and tested and used in production-level deployments already.
+  
 
-Currently, it contains:
+Currently, sequel_plus contains:
   * plugin for Trees to mimic the Rails acts_as_tree plugin.
-  * extension for Exporting data using Dataset#export. 
+  * extension for exporting data using Dataset#export. 
 
 NOTE:  Authors of other plugins and extensions for Sequel are welcome to contact me for inclusion
 of your plugin and extension to this project.
