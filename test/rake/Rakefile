@@ -3,6 +3,7 @@ require 'sequel_plus'
 require 'tasks/sequel'
 
 task :environment do
+  puts "dummy environment"
   DB = Sequel.sqlite
   
   DB.create_table :nodes do
