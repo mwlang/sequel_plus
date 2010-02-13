@@ -5,9 +5,9 @@ The library is in very early infancy stage, so there's not much presently, but w
 in specs and tested and used in production-level deployments already.
   
 
-Currently, sequel_plus contains:
-  * plugin for Trees to mimic the Rails acts_as_tree plugin.
-  * extension for exporting data using Dataset#export. 
+### Currently, sequel_plus contains:
+* plugin for Trees to mimic the Rails acts_as_tree plugin.
+* extension for exporting data using Dataset#export. 
 
 NOTE:  Authors of other plugins and extensions for Sequel are welcome to contact me for inclusion
 of your plugin and extension to this project.
