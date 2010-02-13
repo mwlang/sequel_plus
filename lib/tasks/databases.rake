@@ -1,10 +1,10 @@
 namespace :db do
-  task :app_root do
-    APP_ROOT = File.dirname File.expand_path Rake.application.rakefile
+  task :SEQUEL_PLUS_APP_ROOT do
+    SEQUEL_PLUS_APP_ROOT = File.dirname File.expand_path Rake.application.rakefile
     Rake::Task["environment"].invoke if Rake::Task.task_defined?("environment") 
   end
   
-  task :load_config => [:app_root] do
+  task :load_config => [:SEQUEL_PLUS_APP_ROOT] do
     raise "no DB has been defined.\n Assign DB in your Rakefile or declare an :environment task and connect to your database." unless defined? DB
     Sequel.extension :migration
     Sequel.extension :schema_dumper
@@ -62,24 +62,24 @@ namespace :db do
 
   namespace :schema do
     task :ensure_db_dir do
-      FileUtils.mkdir_p File.join(APP_ROOT, 'db', 'migrate')
+      FileUtils.mkdir_p File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'migrate')
     end
     
     desc "Dumps the schema to db/schema.db"
     task :dump => [:load_config, :ensure_db_dir] do
       schema = DB.dump_schema_migration
-      schema_file = File.open(File.join(APP_ROOT, 'db', 'schema.rb'), "w"){|f| f.write(schema)}
+      schema_file = File.open(File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'schema.rb'), "w"){|f| f.write(schema)}
     end
     
     desc "drops the schema, using schema.rb"
     task :drop => [:load_config, :dump] do
-      eval(File.read(File.join(APP_ROOT, 'db', 'schema.rb'))).apply(DB, :down)
+      eval(File.read(File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'schema.rb'))).apply(DB, :down)
     end
     
     desc "loads the schema from db/schema.rb"
     task :load => :load_config do
-      eval(File.read(File.join(APP_ROOT, 'db', 'schema.rb'))).apply(DB, :up)
-      latest_version = Sequel::Migrator.latest_migration_version(File.join(APP_ROOT, 'db', 'migrate'))
+      eval(File.read(File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'schema.rb'))).apply(DB, :up)
+      latest_version = Sequel::Migrator.latest_migration_version(File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'migrate'))
       Sequel::Migrator.set_current_migration_version(DB, latest_version)
       puts "Database schema loaded version #{latest_version}"
     end
@@ -92,7 +92,7 @@ namespace :db do
   
   desc "Migrate the database through scripts in db/migrate and update db/schema.rb by invoking db:schema:dump."
   task :migrate => :load_config do
-    Sequel::Migrator.apply(DB, File.join(APP_ROOT, 'db', 'migrate'))
+    Sequel::Migrator.apply(DB, File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'migrate'))
     Rake::Task["db:schema:dump"].invoke
     Rake::Task["db:schema:version"].invoke
   end
@@ -110,7 +110,7 @@ namespace :db do
       raise "VERSION is required" unless args[:version]
 
       puts "migrating up to version #{args.version}"
-      Sequel::Migrator.apply(DB, File.join(APP_ROOT, 'db', 'migrate'), args.version)
+      Sequel::Migrator.apply(DB, File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'migrate'), args.version)
       Rake::Task["db:schema:dump"].invoke 
     end
 
@@ -122,7 +122,7 @@ namespace :db do
       down_version = 0 if down_version < 0
 
       puts "migrating down to version #{down_version}"
-      Sequel::Migrator.apply(DB, File.join(APP_ROOT, 'db', 'migrate'), down_version)
+      Sequel::Migrator.apply(DB, File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'migrate'), down_version)
       Rake::Task["db:schema:dump"].invoke
     end
     
@@ -133,7 +133,7 @@ namespace :db do
       else
         table = args.table
         verb = args.verb || 'create'
-        migrate_path = File.join(APP_ROOT,'db', 'migrate')
+        migrate_path = File.join(SEQUEL_PLUS_APP_ROOT,'db', 'migrate')
         begin
           last_file = File.basename(Dir.glob(File.join(migrate_path, '*.rb')).sort.last)
           next_value = last_file.scan(/\d+/).first.to_i + 1
