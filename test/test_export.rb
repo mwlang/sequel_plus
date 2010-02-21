@@ -50,6 +50,13 @@ module ExportTest
       DB[:nodes].all.size.should == 12
     end
 
+    it "should do nothing with empty result sets" do
+      mem_stream = StringIO.new("", "w+")
+      DB[:nodes].filter(:name => 'bogus').export(mem_stream)
+      mem_stream.pos = 0
+      mem_stream.read.should == ""
+    end
+    
     it "should export everything tab delimited w/o quotes" do 
       mem_stream = StringIO.new("", "w+")
       DB[:nodes].export(mem_stream)

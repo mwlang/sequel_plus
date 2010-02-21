@@ -31,8 +31,11 @@ module Sequel
       end
     
       def output 
+        first_row = @dataset.first
+        return unless first_row
+        
         quot = @options[:quote_char]
-        @columns ||= @dataset.first.keys.sort_by{|x|x.to_s}
+        @columns ||= first_row.keys.sort_by{|x|x.to_s}
 
         if @options[:headers] == true
           @file.puts @columns.map{|col| "#{quot}#{col}#{quot}"}.join(@options[:delimiter])
