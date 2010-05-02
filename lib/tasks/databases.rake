@@ -33,6 +33,11 @@ namespace :db do
     puts '=' * 80
   end
 
+  desc "Displays a list of tables" 
+  task :list_tables => :load_config do 
+    DB.tables.sort{|a,b| a.to_s <=> b.to_s}.each_with_index{|table, i| puts ("%-2d" % (i + 1)) + table.to_s}
+  end
+  
   desc "Displays schema of table"
   task :desc, [:table] => :load_config do |t, args|
     def o(value, size = 25)
