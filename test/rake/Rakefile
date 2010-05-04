@@ -1,5 +1,4 @@
 require 'sequel'
-require 'sequel_plus'
 require 'tasks/sequel'
 
 task :environment do
@@ -14,15 +13,15 @@ task :environment do
   end
 
   NODES = [
-    {:id => 1, :name => 'one', :parent_id => nil, :position => 1}, 
-    {:id => 2, :name => 'two', :parent_id => nil, :position => 2}, 
-    {:id => 3, :name => 'three', :parent_id => nil, :position => 3}, 
-    {:id => 4, :name => "two.one", :parent_id => 2, :position => 1},
-    {:id => 5, :name => "two.two", :parent_id => 2, :position => 2},
-    {:id => 6, :name => "two.two.one", :parent_id => 5, :position => 1},
-    {:id => 7, :name => "one.two", :parent_id => 1, :position => 2},
-    {:id => 8, :name => "one.one", :parent_id => 1, :position => 1},
-    {:id => 9, :name => "five", :parent_id => nil, :position => 5},
+    {:id =>  1, :name => 'one', :parent_id => nil, :position => 1}, 
+    {:id =>  2, :name => 'two', :parent_id => nil, :position => 2}, 
+    {:id =>  3, :name => 'three', :parent_id => nil, :position => 3}, 
+    {:id =>  4, :name => "two.one", :parent_id => 2, :position => 1},
+    {:id =>  5, :name => "two.two", :parent_id => 2, :position => 2},
+    {:id =>  6, :name => "two.two.one", :parent_id => 5, :position => 1},
+    {:id =>  7, :name => "one.two", :parent_id => 1, :position => 2},
+    {:id =>  8, :name => "one.one", :parent_id => 1, :position => 1},
+    {:id =>  9, :name => "five", :parent_id => nil, :position => 5},
     {:id => 10, :name => "four", :parent_id => nil, :position => 4},
     {:id => 11, :name => "five.one", :parent_id => 9, :position => 1},
     {:id => 12, :name => "two.three", :parent_id => 2, :position => 3},
