@@ -31,7 +31,7 @@ task :environment do
     primary_key :id
     String :name
     Integer :ipsum_id
-    Integer :neque
+    Integer :neque, :index => true
   end
 
   LOREMS = [

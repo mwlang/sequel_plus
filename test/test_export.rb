@@ -119,6 +119,27 @@ id	name	parent_id	position
 12,"two.three",2,3
       TEXT
     end
+
+    it "should export paginated data with comma delimiter" do 
+      mem_stream = StringIO.new("", "w+")
+      DB[:nodes].export(mem_stream, :quote_char => '"', :delimiter => ',', :paginate => true, :page_size => 2)
+      mem_stream.pos = 0
+      mem_stream.read.should == <<-TEXT
+"id","name","parent_id","position"
+1,"one","",1
+2,"two","",2
+3,"three","",3
+4,"two.one",2,1
+5,"two.two",2,2
+6,"two.two.one",5,1
+7,"one.two",1,2
+8,"one.one",1,1
+9,"five","",5
+10,"four","",4
+11,"five.one",9,1
+12,"two.three",2,3
+      TEXT
+    end
       
     it "should export everything with comma delimiter and no quote characters" do 
       mem_stream = StringIO.new("", "w+")

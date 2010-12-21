@@ -46,6 +46,9 @@ This gem is released to gemcutter.  Rubyforge is not utilized.
     # Specific rows and columns
     File.open("nodes.txt", "w"){|file| DB[:nodes].filter(:id < 5).select(:id, :name).export(file)}
 
+	# Using pagination extension (for very large datasets)
+    File.open("nodes.txt", "w"){|file| DB[:nodes].export(file, :paginate => true, :page_size => 1000)}
+	
 ## Use Rake Tasks
 
 Several rake tasks are made available simply by requiring "tasks/sequel" in your Rakefile 

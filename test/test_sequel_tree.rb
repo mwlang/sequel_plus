@@ -71,7 +71,7 @@ module SequelTreeTest
     it "should find all descendants of a node" do 
       two = Node.find(:id => 2)
       two.name.should == "two"
-      two.descendants.map{|m| m[:id]}.should == [4, 5, 12]
+      two.descendants.map{|m| m[:id]}.should == [4, 5, 12, 6]
     end
   
     it "should find all ancestors of a node" do 

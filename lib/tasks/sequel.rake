@@ -40,16 +40,22 @@ namespace :sq do
 
   desc "Displays schema of table"
   task :desc, [:table] => :load_config do |t, args|
-    def o(value, size = 25)
-      "%#{-1*size}s" % value.to_s
-    end
     unless args[:table]
       Rake::Task["sq:tables"].invoke
     else
       puts '==[' << args.table << ']' << '=' * (80 - args.table.size - 4)
       DB.schema(args.table.to_sym).each_with_index do |col, i|
-       name, info = col
-       puts "#{o i+1, -3}: #{o name}:#{o info[:type], 15}:#{o info[:db_type], 15}:#{' not null ' unless info[:allow_null]} #{' pk ' if info[:primary_key]} #{' default: ' << info[:default].to_s if info[:default]}"
+        name, info = col
+        values = [
+          "%3s:" % (i + 1),
+          (" %-12s:" % "#{info[:db_type]}#{('(' + info[:max_chars].to_s + ')') if info[:max_chars]}"),
+          ("%15s:" % info[:type]),
+          "%-25s: " % name,
+          (' not null ' unless info[:allow_null]),
+          (' pk ' if info[:primary_key]),
+          (" default: %s" % info[:default] if info[:default]),
+          ]
+        puts values.join
       end
       puts '-' * 80
       indexes = DB.indexes(args.table.to_sym)
@@ -58,7 +64,7 @@ namespace :sq do
       else
         indexes.each_with_index do |idx, i|
           name, attrs = idx
-          puts '  ' << o(name, 28) << ": unique? " << o(attrs[:unique] ? 'yes' : 'no', 6) << ': ' << attrs[:columns].join(', ')
+          puts '  ' << "%-28s" % name << ": unique? " << "%-6s" % (attrs[:unique] ? 'yes' : 'no') << ': ' << attrs[:columns].join(', ')
         end
       end
       puts '=' * 80
