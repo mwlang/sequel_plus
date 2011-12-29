@@ -63,7 +63,8 @@ module Sequel
         return unless first_row
         
         quot = @options[:quote_char]
-        @columns ||= first_row.keys.sort_by{|x|x.to_s}
+        @columns = @dataset.columns
+        # @columns = first_row.keys
 
         if @options[:headers] == true
           @file.puts @columns.map{|col| "#{quot}#{col}#{quot}"}.join(@options[:delimiter])
