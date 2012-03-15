@@ -101,7 +101,7 @@ namespace :sq do
     end
   end
   
-  desc "Migrate the database through scripts in db/migrate and update db/schema.rb by invoking db:schema:dump."
+  desc "Migrate the database through scripts in db/migrate and update db/schema.rb by invoking sq:schema:dump."
   task :migrate => :load_config do
     ::Sequel::Migrator.apply(DB, File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'migrate'))
     Rake::Task["sq:schema:dump"].invoke
@@ -153,7 +153,7 @@ namespace :sq do
     desc "Creates a new migrate script.  The verb is optional." 
     task :new, [:table, :verb] => :load_config do |t, args|
       unless args[:table]
-        puts "need to provide a table name:  rake db:migrate:new[new_table]"
+        puts "need to provide a table name:  rake sq:migrate:new[new_table]"
       else
         table = args.table
         verb = args.verb || 'create'
@@ -187,5 +187,5 @@ namespace :sq do
   end
 
   desc 'Drops all tables and recreates the schema from db/schema.rb'
-  task :reset => ['db:schema:drop', 'db:schema:load']
+  task :reset => ['sq:schema:drop', 'sq:schema:load']
 end
