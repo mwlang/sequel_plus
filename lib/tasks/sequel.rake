@@ -23,7 +23,6 @@ namespace :sq do
     Rake::Task["environment"].invoke if Rake::Task.task_defined?("environment") 
   end
   
-  # DONE
   task :load_config => :SEQUEL_PLUS_APP_ROOT do
     raise "no DB has been defined.\n Assign DB in your Rakefile or declare an :environment task and connect to your database." unless defined? DB
     ::Sequel.extension :migration
@@ -31,7 +30,6 @@ namespace :sq do
     ::Sequel.extension :pretty_table
   end
 
-  # DONE
   desc "Displays a list of tables in the database"
   task :tables => :load_config do 
     puts "No tables in this database" if DB.tables.empty?
@@ -41,13 +39,11 @@ namespace :sq do
   end
   task :list_tables => :tables
   
-  # DONE
   desc "Displays content of table or lists all tables"
   task :show, [:table] => :load_config do |t, args|
     args.table ? DB[args.table.to_sym].print : Rake::Task["sq:tables"].invoke
   end
   
-  # DONE
   desc "Displays simple list of fields of table in sorted order"
   task :fields, [:table] => :load_config do |t, args|
     raise "no table name given" unless args[:table]
@@ -57,7 +53,6 @@ namespace :sq do
     puts '=' * 80
   end
 
-  # DONE
   desc "Displays schema of table"
   task :desc, [:table] => :load_config do |t, args|
     unless args[:table]
@@ -94,26 +89,22 @@ namespace :sq do
 
   namespace :schema do
 
-    # DONE
     task :ensure_db_dir do
       Rake::Task["sq:SEQUEL_PLUS_APP_ROOT"].invoke
       FileUtils.mkdir_p migration_dir()
     end
     
-    # DONE
     desc "Dumps the schema to db/schema.db"
     task :dump => [:load_config, :ensure_db_dir] do
       schema = DB.dump_schema_migration
       File.open(File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'schema.rb'), "w"){|f| f.write(schema)}
     end
     
-    # DONE
     desc "drops the schema, using schema.rb"
     task :drop => [:load_config, :dump] do
       eval( File.read( schema_rb() )).apply(DB, :down)
     end
     
-    # CURRENT
     desc "loads the schema from db/schema.rb"
     task :load => :load_config do
       # eval(File.read(File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'schema.rb'))).apply(DB, :up)
@@ -132,11 +123,12 @@ namespace :sq do
   
   desc "Migrate the database through scripts in db/migrate and update db/schema.rb by invoking db:schema:dump."
   task :migrate => :load_config do
-    Sequel.Migrator.run()
+    Sequel::Migrator.run( DB, migration_dir )
     Rake::Task["sq:schema:dump"].invoke
     Rake::Task["sq:schema:version"].invoke
   end
 
+  # CURRENT
   namespace :migrate do
     desc "Perform automigration (reset your db data)"
     task :auto => :load_config do
