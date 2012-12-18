@@ -128,7 +128,7 @@ namespace :sq do
     Rake::Task["sq:schema:version"].invoke
   end
 
-  # CURRENT  
+  # CURRENT
   namespace :migrate do
     desc "Perform automigration (reset your db data)"
     task :auto => :load_config do
