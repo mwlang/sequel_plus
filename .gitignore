@@ -21,7 +21,6 @@ pkg
 doc
 
 ## PROJECT::SPECIFIC
-*.gemspec
 
 test/rake/db/migrate/*.rb
 test/rake/db/schema.rb
