@@ -1,6 +1,7 @@
 Sequel.extension :migration
 
 def get_migrator( opts = {} )
+  # FIXME - violating Sequel's API visibility - private method
   Sequel::Migrator.send( :migrator_class, migration_dir ).new( DB, migration_dir, opts )
 end
 
@@ -109,7 +110,7 @@ namespace :sq do
       # eval(File.read(File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'schema.rb'))).apply(DB, :up)
       eval( File.read schema_rb ).apply(DB, :up)
       m = get_migrator()
-      # XXX - Double API visibility violation
+      # FIXME - Double API visibility violation
       m.send( :set_migration_version, m.send( :latest_migration_version ) )
       puts "Database schema loaded version #{ get_migrator().current }"
     end
@@ -128,7 +129,6 @@ namespace :sq do
   end
 
   namespace :migrate do
-    # XXX - BOOM
     desc "Perform automigration (reset your db data)"
     task :auto => :load_config do
       Sequel::Migrator.run( DB, migration_dir, :target => 0 )
