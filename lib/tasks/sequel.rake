@@ -1,16 +1,15 @@
 Sequel.extension :migration
 
 def get_migrator( opts = {} )
-  dir = File.join( SEQUEL_PLUS_APP_ROOT, %{db}, %{migrate} )
-  Sequel::Migrator.send( :migrator_class, dir ).new( DB, dir, opts )
+  Sequel::Migrator.send( :migrator_class, migration_dir ).new( DB, migration_dir, opts )
 end
 
 def migration_dir
-  File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'migrate')
+  File.join( SEQUEL_PLUS_APP_ROOT, %{db}, %{migrate} )
 end
 
 def schema_rb
-  File.join(SEQUEL_PLUS_APP_ROOT, %{db}, %{schema.rb} )
+  File.join( SEQUEL_PLUS_APP_ROOT, %{db}, %{schema.rb} )
 end
 
 namespace :sq do
@@ -101,7 +100,7 @@ namespace :sq do
     end
     
     desc "drops the schema, using schema.rb"
-    task :drop => [:load_config, :dump] do
+    task :drop => [ :load_config ] do
       eval( File.read( schema_rb() )).apply(DB, :down)
     end
     
@@ -128,15 +127,15 @@ namespace :sq do
     Rake::Task["sq:schema:version"].invoke
   end
 
-  # CURRENT
   namespace :migrate do
+    # XXX - BOOM
     desc "Perform automigration (reset your db data)"
     task :auto => :load_config do
-      ::Sequel::Migrator.run DB, "db/migrate", :target => 0
-      ::Sequel::Migrator.run DB, "db/migrate"
+      Sequel::Migrator.run( DB, migration_dir, :target => 0 )
+      Sequel::Migrator.run( DB, migration_dir )
     end
 
-    desc  'Rollbacks the database one migration and re-migrates up.'
+    desc  'Rolls back the database one migration and re-migrates up.'
     task :redo => :load_config do
       Rake::Task["sq:rollback"].invoke
       Rake::Task["sq:migrate"].invoke
@@ -148,11 +147,10 @@ namespace :sq do
       version = (args.version || ENV['VERSION']).to_s.strip
       raise "No VERSION was provided" if version.empty?
       puts "Migrating to version #{args.version}"
-      Sequel::Migrator.run(DB, migration_dir(), :target => version.to_i)
+      Sequel::Migrator.run( DB, migration_dir(), :current => get_migrator.current, :target => version.to_i )
       puts "Migrated to version #{get_migrator().current}"
     end
 
-    # DONE
     desc 'Runs the "up" for a given migration VERSION.'
     task :up, [:version] => :load_config do |t, args|
       raise "version is required" unless args[:version]
@@ -163,7 +161,6 @@ namespace :sq do
       Rake::Task["sq:schema:dump"].invoke 
     end
 
-    # DONE
     desc 'Reverts to previous schema version.  Specify the number of steps with STEP=n'
     task :down, [:step] => :load_config do |t, args|
       step = args[:step] ? args.step.to_i : 1
@@ -174,9 +171,7 @@ namespace :sq do
 
       puts "migrating down from version #{ current_version } to version #{down_version}"
 
-      # Sequel::Migrator.apply( DB, migration_dir(), down_version, current_version )
       Sequel::Migrator.run( DB, migration_dir(), :current => m.current, :target => down_version )
-      # ::Sequel::Migrator.apply(DB, File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'migrate'), down_version)
       Rake::Task["sq:schema:dump"].invoke
     end
     
@@ -187,15 +182,14 @@ namespace :sq do
       else
         table = args.table
         verb = args.verb || 'create'
-        migrate_path = File.join(SEQUEL_PLUS_APP_ROOT,'db', 'migrate')
         begin
-          last_file = File.basename(Dir.glob(File.join(migrate_path, '*.rb')).sort.last)
+          last_file = File.basename(Dir.glob(File.join(migration_dir(), '*.rb')).sort.last)
           next_value = last_file.scan(/\d+/).first.to_i + 1
         rescue
           next_value = 1
         end
         filename = '%03d' % next_value << "_" << args.table << '.rb'
-        File.open(File.join(migrate_path, filename), 'w') do |file|
+        File.open(File.join(migration_dir(), filename), 'w') do |file|
           file.puts "class #{verb.capitalize}#{table.capitalize} < Sequel::Migration\n"
           file.puts "\tdef up"
           file.puts "\t\t#{verb}_table :#{table} do"
@@ -217,5 +211,5 @@ namespace :sq do
   end
 
   desc 'Drops all tables and recreates the schema from db/schema.rb'
-  task :reset => ['db:schema:drop', 'db:schema:load']
+  task :reset => ['sq:schema:drop', 'sq:schema:load']
 end
