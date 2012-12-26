@@ -107,12 +107,7 @@ namespace :sq do
     
     desc "loads the schema from db/schema.rb"
     task :load => :load_config do
-      # eval(File.read(File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'schema.rb'))).apply(DB, :up)
       eval( File.read schema_rb ).apply(DB, :up)
-      m = get_migrator()
-      # FIXME - Double API visibility violation
-      m.send( :set_migration_version, m.send( :latest_migration_version ) )
-      puts "Database schema loaded version #{ get_migrator().current }"
     end
     
     desc "Returns current schema version"
