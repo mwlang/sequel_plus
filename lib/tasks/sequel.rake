@@ -1,13 +1,36 @@
 Sequel.extension :migration
 
+class NullMigrator
+  def method_missing(*args, &block)
+    self
+  end
+
+  def current
+    DB[ :schema_info ].first[ :version ]
+  end
+end
+
 def get_migrator( opts = {} )
-  # FIXME - violating Sequel's API visibility - private method
-  Sequel::Migrator.send( :migrator_class, migration_dir ).new( DB, migration_dir, opts )
+
+  if Dir[ File.join( migration_dir, %{*.rb} ) ].size > 0
+    # FIXME - violating Sequel's API visibility - private method
+    Sequel::Migrator.send( :migrator_class, migration_dir ).new( DB, migration_dir, opts )
+  else
+    NullMigrator.new
+  end
+
 end
 
 def migration_dir
   File.join( SEQUEL_PLUS_APP_ROOT, %{db}, %{migrate} )
 end
+
+def run_migrations( db, dir, *opts )
+  if Dir[ File.join( dir, %{*.rb} ) ].size > 0
+    Sequel::Migrator.run( db, dir, opts )
+  end
+end
+
 
 def schema_rb
   File.join( SEQUEL_PLUS_APP_ROOT, %{db}, %{schema.rb} )
@@ -118,7 +141,7 @@ namespace :sq do
   
   desc "Migrate the database through scripts in db/migrate and update db/schema.rb by invoking db:schema:dump."
   task :migrate => :load_config do
-    Sequel::Migrator.run( DB, migration_dir )
+    run_migrations( DB, migration_dir )
     Rake::Task["sq:schema:dump"].invoke
     Rake::Task["sq:schema:version"].invoke
   end
@@ -126,8 +149,8 @@ namespace :sq do
   namespace :migrate do
     desc "Perform automigration (reset your db data)"
     task :auto => :load_config do
-      Sequel::Migrator.run( DB, migration_dir, :target => 0 )
-      Sequel::Migrator.run( DB, migration_dir )
+      run_migrations( DB, migration_dir, :target => 0 )
+      run_migrations( DB, migration_dir )
     end
 
     desc  'Rolls back the database one migration and re-migrates up.'
@@ -142,7 +165,7 @@ namespace :sq do
       version = (args.version || ENV['VERSION']).to_s.strip
       raise "No VERSION was provided" if version.empty?
       puts "Migrating to version #{args.version}"
-      Sequel::Migrator.run( DB, migration_dir(), :current => get_migrator.current, :target => version.to_i )
+      run_migrations( DB, migration_dir(), :current => get_migrator.current, :target => version.to_i )
       puts "Migrated to version #{get_migrator().current}"
     end
 
@@ -152,7 +175,7 @@ namespace :sq do
 
       m = get_migrator()
       puts "migrating up from version #{ m.current } to version #{args.version}"
-      Sequel::Migrator.run( DB, migration_dir(), :current => m.current, :target => args.version.to_i )
+      run_migrations( DB, migration_dir(), :current => m.current, :target => args.version.to_i )
       Rake::Task["sq:schema:dump"].invoke 
     end
 
@@ -166,7 +189,7 @@ namespace :sq do
 
       puts "migrating down from version #{ current_version } to version #{down_version}"
 
-      Sequel::Migrator.run( DB, migration_dir(), :current => m.current, :target => down_version )
+      run_migrations( DB, migration_dir(), :current => m.current, :target => down_version )
       Rake::Task["sq:schema:dump"].invoke
     end
     
