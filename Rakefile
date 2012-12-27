@@ -5,11 +5,11 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "sequel_plus"
-    gem.summary = "provides plugins and extensions for Sequel"
-    gem.description = "Provides plugins and extensions for Sequel"
-    gem.email = "mwlang@cybrains.net"
-    gem.homepage = "http://github.com/mwlang/sequel_plus"
-    gem.authors = ["Michael Lang"]
+    gem.summary = "provides plugins and extensions for Sequel (forked from mwlang)"
+    gem.description = "Provides plugins and extensions for Sequel (forked from mwlang)"
+    gem.email = "maxs@webwizarddesign.com (forked from mwlang@cybrains.net)"
+    gem.homepage = "http://github.com/perldork/sequel_plus"
+    gem.authors = ["Michael Lang", "3.4.2 patches by Max Schubert"]
     gem.files = [
        "LICENSE",
        "README.md",
