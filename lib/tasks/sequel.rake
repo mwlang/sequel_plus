@@ -1,3 +1,41 @@
+Sequel.extension :migration
+
+class NullMigrator
+  def method_missing(*args, &block)
+    self
+  end
+
+  def current
+    DB[ :schema_info ].first[ :version ]
+  end
+end
+
+def get_migrator( opts = {} )
+
+  if Dir[ File.join( migration_dir, %{*.rb} ) ].size > 0
+    # FIXME - violating Sequel's API visibility - private method
+    Sequel::Migrator.send( :migrator_class, migration_dir ).new( DB, migration_dir, opts )
+  else
+    NullMigrator.new
+  end
+
+end
+
+def migration_dir
+  File.join( SEQUEL_PLUS_APP_ROOT, %{db}, %{migrate} )
+end
+
+def run_migrations( db, dir, *opts )
+  if Dir[ File.join( dir, %{*.rb} ) ].size > 0
+    Sequel::Migrator.run( db, dir, opts )
+  end
+end
+
+
+def schema_rb
+  File.join( SEQUEL_PLUS_APP_ROOT, %{db}, %{schema.rb} )
+end
+
 namespace :sq do
   task :SEQUEL_PLUS_APP_ROOT do
     if defined? PADRINO_ROOT
@@ -71,9 +109,12 @@ namespace :sq do
     end
   end
 
+
   namespace :schema do
+
     task :ensure_db_dir do
-      FileUtils.mkdir_p File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'migrate')
+      Rake::Task["sq:SEQUEL_PLUS_APP_ROOT"].invoke
+      FileUtils.mkdir_p migration_dir()
     end
     
     desc "Dumps the schema to db/schema.db"
@@ -83,27 +124,24 @@ namespace :sq do
     end
     
     desc "drops the schema, using schema.rb"
-    task :drop => [:load_config, :dump] do
-      eval(File.read(File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'schema.rb'))).apply(DB, :down)
+    task :drop => [ :load_config ] do
+      eval( File.read( schema_rb() )).apply(DB, :down)
     end
     
     desc "loads the schema from db/schema.rb"
     task :load => :load_config do
-      eval(File.read(File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'schema.rb'))).apply(DB, :up)
-      latest_version = ::Sequel::Migrator.latest_migration_version(File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'migrate'))
-      ::Sequel::Migrator.set_current_migration_version(DB, latest_version)
-      puts "Database schema loaded version #{latest_version}"
+      eval( File.read schema_rb ).apply(DB, :up)
     end
     
     desc "Returns current schema version"
     task :version => :load_config do
-      puts "Current Schema Version: #{::Sequel::Migrator.get_current_migration_version(DB)}"
+      puts "Current Schema Version: #{ get_migrator().current }"
     end
   end
   
   desc "Migrate the database through scripts in db/migrate and update db/schema.rb by invoking db:schema:dump."
   task :migrate => :load_config do
-    ::Sequel::Migrator.apply(DB, File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'migrate'))
+    run_migrations( DB, migration_dir )
     Rake::Task["sq:schema:dump"].invoke
     Rake::Task["sq:schema:version"].invoke
   end
@@ -111,11 +149,11 @@ namespace :sq do
   namespace :migrate do
     desc "Perform automigration (reset your db data)"
     task :auto => :load_config do
-      ::Sequel::Migrator.run DB, "db/migrate", :target => 0
-      ::Sequel::Migrator.run DB, "db/migrate"
+      run_migrations( DB, migration_dir, :target => 0 )
+      run_migrations( DB, migration_dir )
     end
 
-    desc  'Rollbacks the database one migration and re-migrates up.'
+    desc  'Rolls back the database one migration and re-migrates up.'
     task :redo => :load_config do
       Rake::Task["sq:rollback"].invoke
       Rake::Task["sq:migrate"].invoke
@@ -124,29 +162,34 @@ namespace :sq do
 
     desc "Perform migration up/down to VERSION"
     task :to, [:version] => :load_config do |t, args|
-      version = (args[:version] || ENV['VERSION']).to_s.strip
+      version = (args.version || ENV['VERSION']).to_s.strip
       raise "No VERSION was provided" if version.empty?
-      ::Sequel::Migrator.apply(DB, "db/migrate", version.to_i)
+      puts "Migrating to version #{args.version}"
+      run_migrations( DB, migration_dir(), :current => get_migrator.current, :target => version.to_i )
+      puts "Migrated to version #{get_migrator().current}"
     end
 
     desc 'Runs the "up" for a given migration VERSION.'
     task :up, [:version] => :load_config do |t, args|
       raise "version is required" unless args[:version]
 
-      puts "migrating up to version #{args.version}"
-      ::Sequel::Migrator.apply(DB, File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'migrate'), args.version.to_i)
+      m = get_migrator()
+      puts "migrating up from version #{ m.current } to version #{args.version}"
+      run_migrations( DB, migration_dir(), :current => m.current, :target => args.version.to_i )
       Rake::Task["sq:schema:dump"].invoke 
     end
 
     desc 'Reverts to previous schema version.  Specify the number of steps with STEP=n'
     task :down, [:step] => :load_config do |t, args|
       step = args[:step] ? args.step.to_i : 1
-      current_version = ::Sequel::Migrator.get_current_migration_version(DB)
+      m = get_migrator()
+      current_version = m.current
       down_version = current_version - step
       down_version = 0 if down_version < 0
 
-      puts "migrating down to version #{down_version}"
-      ::Sequel::Migrator.apply(DB, File.join(SEQUEL_PLUS_APP_ROOT, 'db', 'migrate'), down_version)
+      puts "migrating down from version #{ current_version } to version #{down_version}"
+
+      run_migrations( DB, migration_dir(), :current => m.current, :target => down_version )
       Rake::Task["sq:schema:dump"].invoke
     end
     
@@ -157,15 +200,14 @@ namespace :sq do
       else
         table = args.table
         verb = args.verb || 'create'
-        migrate_path = File.join(SEQUEL_PLUS_APP_ROOT,'db', 'migrate')
         begin
-          last_file = File.basename(Dir.glob(File.join(migrate_path, '*.rb')).sort.last)
+          last_file = File.basename(Dir.glob(File.join(migration_dir(), '*.rb')).sort.last)
           next_value = last_file.scan(/\d+/).first.to_i + 1
         rescue
           next_value = 1
         end
         filename = '%03d' % next_value << "_" << args.table << '.rb'
-        File.open(File.join(migrate_path, filename), 'w') do |file|
+        File.open(File.join(migration_dir(), filename), 'w') do |file|
           file.puts "class #{verb.capitalize}#{table.capitalize} < Sequel::Migration\n"
           file.puts "\tdef up"
           file.puts "\t\t#{verb}_table :#{table} do"
@@ -187,5 +229,5 @@ namespace :sq do
   end
 
   desc 'Drops all tables and recreates the schema from db/schema.rb'
-  task :reset => ['db:schema:drop', 'db:schema:load']
+  task :reset => ['sq:schema:drop', 'sq:schema:load']
 end
